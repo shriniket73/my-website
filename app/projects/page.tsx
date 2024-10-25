@@ -13,12 +13,9 @@ export default function Projects() {
       <h1 className="mb-8 text-2xl font-medium tracking-tight">Projects</h1>
       <div className="space-y-6">
         {projects.map((project, index) => (
-          <a
+          <div
             key={index}
-            href={project.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block group hover:opacity-80 transition-opacity duration-200"
+            className="block p-6 rounded-lg border border-neutral-200 dark:border-neutral-800 group transition-colors duration-200"
           >
             <div className="flex flex-col">
               <div className="w-full flex justify-between items-baseline">
@@ -26,14 +23,28 @@ export default function Projects() {
                   {project.title}
                 </span>
                 <span className="text-neutral-600 dark:text-neutral-400 tabular-nums text-sm">
-                  {project.year}
+                  {project.date}
                 </span>
               </div>
               <p className="prose prose-neutral dark:prose-invert pt-3">
                 {project.description}
               </p>
+              <div className="flex flex-wrap gap-4 mt-3">
+                {project.links.map((link, linkIndex) => (
+                  <a
+                    key={linkIndex}
+                    href={link.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm inline-flex items-center gap-1"
+                  >
+                    {link.text}
+                    <span className="text-xs">↗</span>
+                  </a>
+                ))}
+              </div>
             </div>
-          </a>
+          </div>
         ))}
       </div>
     </section>
