@@ -33,18 +33,8 @@ const nextConfig = {
         source: "/json",
         destination: "/feed/feed.json",
       },
-      
-      // New rewrites for Elon Musk project
-      {
-        source: "/projects/spend-elon-musk-money",
-        destination: "https://spend-elon-musk-money-eight.vercel.app",
-      },
-      {
-        source: "/projects/spend-elon-musk-money/:path*",
-        destination: "https://spend-elon-musk-money-eight.vercel.app/:path*",
-      },
-    ];
-  },
+    ]
+  }
 };
 
 module.exports = nextConfig;
