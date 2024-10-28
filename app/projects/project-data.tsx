@@ -40,14 +40,18 @@ export const projects: Project[] = [
     ]
   },
   {
-    title: "Project Three",
-    date: "01-06-2069",
+    title: "Spend Elon Musk Money",
+    date: "28-10-2024",
     description:
-      "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Laboriosam veritatis dolorem rem praesentium dicta labore, at laudantium quisquam.",
+      "Imaging if you could spend Elon Musk's money on fancy things. Made a fun project using next.js where you can hypothetically buy anything from the elon musk's money. Inspored by the legend https://neal.fun/spend/",
     links: [
       {
-        text: "Demo",
-        url: "https://example.com/"
+        text: "Project",
+        url: "https://www.shriniket.me/projects/spend-elon-musk-money"
+      },
+      {
+        text: "GitHub",
+        url: "https://github.com/shriniket73/spend-elon-musk-money"
       }
     ]
   },
