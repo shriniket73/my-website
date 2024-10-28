@@ -33,6 +33,20 @@ const nextConfig = {
         source: "/json",
         destination: "/feed/feed.json",
       },
+    ];
+  },
+  async headers() {
+    return [
+      {
+        // This allows your site to be embedded in an iframe
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          }
+        ],
+      },
     ]
   }
 };

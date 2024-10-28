@@ -35,7 +35,7 @@ export const projects: Project[] = [
       },
       {
         text: "GitHub",
-        url: "https://github.com/shriniket73/CalorieCounter"  // Replace with actual URL
+        url: "https://github.com/shriniket73/CalorieCounter"
       }
     ]
   },
@@ -43,7 +43,7 @@ export const projects: Project[] = [
     title: "Spend Elon Musk Money",
     date: "28-10-2024",
     description:
-      "Imaging if you could spend Elon Musk's money on fancy things. Made a fun project using next.js where you can hypothetically buy anything from the elon musk's money. Inspored by the legend https://neal.fun/spend/",
+      "Imagine if you could spend Elon Musk's money on fancy things. Made a fun project using Next.js where you can hypothetically buy anything from Elon Musk's fortune. Inspired by the legend https://neal.fun/spend/",
     links: [
       {
         text: "Project",
@@ -54,5 +54,5 @@ export const projects: Project[] = [
         url: "https://github.com/shriniket73/spend-elon-musk-money"
       }
     ]
-  },
+  }
 ];
