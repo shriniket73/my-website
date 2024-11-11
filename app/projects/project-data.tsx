@@ -34,6 +34,10 @@ export const projects: Project[] = [
         url: "https://www.linkedin.com/posts/shriniket-acharya_in-this-video-i-talk-about-two-things-activity-7255360993629765634-VrJM"
       },
       {
+        text: "Project",
+        url: "https://calorie-counter-liart.vercel.app/"
+      },
+      {
         text: "GitHub",
         url: "https://github.com/shriniket73/CalorieCounter"
       }
@@ -52,6 +56,22 @@ export const projects: Project[] = [
       {
         text: "GitHub",
         url: "https://github.com/shriniket73/spend-elon-musk-money"
+      }
+    ]
+  },
+  {
+    title: "Partner Probability Calculator",
+    date: "12-11-2024",
+    description:
+      "Built a Partner Matching Probability Calculator in India backed by report from National Health Familuy Survey of India and other sources",
+    links: [
+      {
+        text: "Project",
+        url: "https://www.smallpp.in/"
+      },
+      {
+        text: "GitHub",
+        url: "https://github.com/shriniket73/partner-probability"
       }
     ]
   }
