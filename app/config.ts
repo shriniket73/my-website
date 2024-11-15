@@ -4,7 +4,7 @@ export const metaData = {
   name: "Shriniket",
   ogImage: "/opengraph-image.png",
   description:
-    "This is my brian on internet",
+    "This is my brain on internet",
 };
 
 export const socialLinks = {
