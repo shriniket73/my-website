@@ -30,7 +30,7 @@ export const projects: Project[] = [
       "Created an app that takes your food photo and provides you total and item wise calories and protein information",
     links: [
       {
-        text: "LinkedIn Post",
+        text: "Explainer Video",
         url: "https://www.linkedin.com/posts/shriniket-acharya_in-this-video-i-talk-about-two-things-activity-7255360993629765634-VrJM"
       },
       {
@@ -65,9 +65,13 @@ export const projects: Project[] = [
     description:
       "Built a Partner Matching Probability Calculator in India backed by report from National Health Familuy Survey of India and other sources",
     links: [
+    {
+      text: "Explainer Video",
+      url: "https://www.linkedin.com/posts/shriniket-acharya_in-this-video-i-talk-about-1-how-i-built-activity-7262205905356677120-oxw7?utm_source=share&utm_medium=member_desktop"
+    },
       {
         text: "Project",
-        url: "https://www.smallpp.in/"
+        url: "https://www.smallpp.in/" 
       },
       {
         text: "GitHub",
