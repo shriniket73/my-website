@@ -15,15 +15,15 @@ export const projects: Project[] = [
     title: "Voice-Chat with David Goggins",
     date: "02-12-2024",
     description:
-      "Uses zero-shot voice cloning on Coqui TTS-v2 model to clone David Goggins' voice and integrates with Whisper for STT (speech-to-text) and GPT-4o to generate responses.",
+      "Used zero-shot voice cloning on Coqui TTS-v2 model to clone David Goggins' voice and integrates with Whisper for STT (speech-to-text) and GPT-4o to generate responses.",
     links: [
       {
-        text: "Demo",
-        url: "/videos/voice-chat-goggins-demo.mp4"
+        text: "Blog Post",
+        url: "/blog/building-a-David-Goggins-chat-bot"
       },
       {
         text: "Hugging Face Space",
-        url: "https://huggingface.co/spaces/shriniket73/goggins-chat"
+        url: "https://huggingface.co/spaces/shriniket73/goggins-chat/tree/main"
       }
     ]
   },
