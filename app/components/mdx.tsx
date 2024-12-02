@@ -8,6 +8,7 @@ import { CaptionComponent } from "./caption";
 import { YouTubeComponent } from "./youtube";
 import { ImageGrid } from "./image-grid";
 import rehypeKatex from "rehype-katex";
+import { VideoComponent } from "./video";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 
@@ -112,6 +113,7 @@ let components = {
   a: CustomLink,
   StaticTweet: TweetComponent,
   Caption: CaptionComponent,
+  Video: VideoComponent,
   YouTube: YouTubeComponent,
   code: Code,
   Table,
