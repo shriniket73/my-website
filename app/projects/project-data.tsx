@@ -22,6 +22,10 @@ export const projects: Project[] = [
         url: "https://tanmay-op-quiz.vercel.app/"
       },
       {
+        text: "Blog Post",
+        url: "/blog/extracting-name-from-youtube"
+      },
+      {
         text: "Github",
         url: "https://github.com/shriniket73/op-nickname-extraction"
       }
