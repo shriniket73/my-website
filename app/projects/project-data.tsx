@@ -12,6 +12,22 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "OP Names extraction from Tanmay Bhat Videos",
+    date: "25-12-2024",
+    description:
+      "Used Whisper and Deepgram's STT API to extract the Guest's OP names from Tanmay Bhat's Youtube Reaction videos and made a quiz from that data.",
+    links: [
+      {
+        text: "Project",
+        url: "https://tanmay-op-quiz.vercel.app/"
+      },
+      {
+        text: "Github",
+        url: "https://github.com/shriniket73/op-nickname-extraction"
+      }
+    ]
+  },
+  {
     title: "Voice-Chat with David Goggins",
     date: "02-12-2024",
     description:

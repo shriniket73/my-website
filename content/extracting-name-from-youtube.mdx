@@ -1,81 +1,90 @@
 ---
-title: "Extracting OP names from Tanmay Bhat Youtuve Videos"
+title: "Extracting OP Names from Tanmay Bhat's YouTube Videos"
 publishedAt: "2024-12-25"
-summary: "Exploring various STT models to extract a certain type of nicknames of guest appearing on Tanmay bhat's videos"
+summary: "Exploring various STT models to extract guest nicknames from Tanmay Bhat's reaction videos."
 tags: "AI, STT, Side Project"
 ---
+## Introduction
+
+Tanmay Bhat is one of India's most popular content creators, known for his reaction videos and gaming streams. A unique aspect of his content is how he assigns memorable nicknames to his guests and fellow creators, always ending with "OP" (typically meaning "overpowered" in gaming culture). This project aims to catalog and analyze these nicknames using AI and speech recognition.
 
 ## The Idea
-If you watch Tanmay Bhat's reaction videos, you would have noticed that he always give his guest nicknames that ends with "er" like Rider OP, Prisoner OP, etc. So I thought what all nicknames have been used so far and is there someone who's maintaining a Database for it? 
-As my first instinct I just plexed it to see if perplexity has its answer
 
-<div className="flex justify-center">
+While watching Tanmay's reaction videos, a pattern emerges: each guest receives a unique nickname ending with "er OP" or "ar OP", such as "Rider OP" or "Prisoner OP". So I thought of creating a comprehensive database of all these nicknames.
+
+Naturally, my first instinct was to ask Perplexity:
+
+ <div className="flex justify-center">
   <Image 
     src="/images/perplexity-answer.png"
     alt="Perplexity Answer"
-    width={300}
-    height={300}
+    width={700}
+    height={700}
     className="rounded-lg my-4"
   />
-</div>
+ </div>
 
-As it showed me nothing I decided to take matter into my own hands.
+Since it showed no results, I decided to take matter into my own hands.
 
 <Caption>
-  "Fine, I'll do it myself"
+  "Fine, I'll do it myself."
 </Caption>
 
 ## **Approach**
-Of course I'd want to programmatically find this out instead of watching all the videos and noting the names down.
+I wanted to programmatically figure this out instead of manually watching all the videos and noting down the nicknames.
 
-### **1. Get the Transcription of the videos**
-Once we have what was spoken in thi video we can easily get those nicknames from the text.
+### **Getting Transcriptions**
+If we could transcribe what was spoken in the videos, extracting the nicknames from the text would be straightforward.
+
 - **Video Metadata Fetching**:
-  - Initially relied on the YouTube Data API v3 to fetch the videos which presented challenges in handling channel and playlist IDs plus the entire API documentation was quite hard to understand. 
-  - Transitioned to `yt-dlp` for video metadata and audio extraction, which simlpified the process a lot. But it did take ~8-9 hours to process all the videos. 
+  - Initially used the YouTube Data API v3, which presented challenges in handling channel and playlist IDs, and the documentation was unnecessarily complex.
+  - Transitioned to **yt-dlp**, which significantly simplified video metadata and audio extraction but required ~8–9 hours to process all the videos.
+
 - **Audio Processing**:
-  - Initially I was trimming only the starting 30 seconds, but realised that in a lot of videos the introduction is done quite late so started taking first 2 minute audio. 
-  - Used `ffmpeg` to trim the first 2 minutes of audio for transcription.
-  - Maintained a pipeline that avoids redundant audio downloads, optimizing resource usage.
+  - Initially trimmed only the first 30 seconds of audio, but realized nicknames were often introduced later in the video. Increased the duration to 2 minutes for broader coverage.
+  - Used **ffmpeg** to trim audio for transcription.
+  - Built a pipeline to avoid redundant audio downloads, optimizing resource usage.
 
----
 
-### **2. Transcription Services**
-For transcription I initially tested Deepgram, Whisper, and Google's STT to transcribe Speech-to-text. Used their APIs to transcribe local audio files.
-Check the video below which highlights the output quality of each of the APIs.
+### **Transcription Services**
+To transcribe audio into text, I tested **Deepgram**, **Whisper**, and **Google STT APIs**:
+
 <Video
-src="/videos/STT-api-comparison.mp4"
-controls
-style={{
-maxWidth: "100%",
-height: "auto",
-borderRadius: "8px",
-marginTop: "1rem",
-marginBottom: "1rem"
-}}
+  src="/videos/STT-api-comparison.mp4"
+  controls
+  style={{
+    maxWidth: "100%",
+    height: "auto",
+    borderRadius: "8px",
+    marginTop: "1rem",
+    marginBottom: "1rem"
+  }}
 />
 
 - **Google STT API**:
-  - Tried on multiple videos but results were quite inaccurate, I think that could be due to multi-langugage in the audio or the indian accent of english could be the reason.
+  - Produced highly inaccurate results on multi-language audio, likely due to difficulties with Indian accents and mixed-language content.
+  
 - **OpenAI Whisper API**:
-  - Provided multilingual transcription but struggled with Hinglish-specific content accuracy. But gave quite good output when the langage parameter was set to translate to english
-  - Even tested some open source tranliteration APIs to convert hindi text to hinglish text to extract nicknames but the output was not accurate. 
+  - Handled multilingual transcriptions well when set to translate to English but struggled with Hinglish-specific nuances.
+  - Experimented with open-source transliteration APIs to convert Hindi text to Hinglish, but results were unsatisfactory.
+
 - **Deepgram API**:
-  - Offered high accuracy for English transcriptions but underperformed with mixed-language (Hindi/Hinglish) content. Even with langaugae param set to "multi" it didn't transcribe the hindi language used in the audio. 
+  - Provided high accuracy for English but failed to process Hindi or Hinglish effectively, even with the language parameter set to "multi."
+
 - **Fallback Mechanism**:
-  - Used both Whisper and Deepgram APIs to store and transcribe the result to maximize transcription accuracy and coverage.
+  - Both Whisper and Deepgram results were stored for comparison to maximize transcription accuracy.
 
----
-
-### **3. Nickname Extraction**
+### **Nickname Extraction**
 - **Regex Logic**:
   - Extracted nicknames matching patterns like `<Something ending with er> OP` or `<Something ending with ar> OP`.
 - **GPT-4 Processing**:
   - Utilized a refined prompt to infer and standardize nicknames when transcriptions contained errors or ambiguities.
   - Addressed issues like incorrect nicknames (`"Prznar OP"`) by standardizing them (`"Prisoner OP"`).
-  Check the entire prompt sent for processing
-<Caption
-You are an expert at extracting nicknames from YouTube video transcripts, especially skilled at identifying badly transcribed nicknames that end with "OP".
+
+Check the entire prompt sent for processing:
+```typescript
+    const prompt = `
+      You are an expert at extracting nicknames from YouTube video transcripts, especially skilled at identifying badly transcribed nicknames that end with "OP".
   
       ### Critical Understanding:
       1. Due to speech-to-text errors, nicknames often get badly mangled:
@@ -118,21 +127,20 @@ You are an expert at extracting nicknames from YouTube video transcripts, especi
       - Have proper capitalization
       - Be a real word ending in -er or -ar
       Example: ["Gamer OP", "Writer OP", "Hustler OP"]
-/Caption>
+    `;
+```
 
----
 
 ## **Challenges and Solutions**
 
-### **1. Mixed-Language Transcriptions**
+### **Mixed-Language Transcriptions**
 - **Problem**: Transcription services often ignored or misprocessed Hindi/Hinglish content.
 - **Solution**: Combined Deepgram (for English) and Whisper (for multilingual) to cover both scenarios. Results from both were saved for further analysis.
 
-### **2. Inconsistent Nickname Standardization**
-- **Problem**: Transcriptions contained errors (e.g., `"Mahib Ji OP"`).
-- **Solution**: Developed a robust GPT prompt with examples and validation to infer meaningful and standardized nicknames.
+### **Inconsistent Nickname Standardization**
+- **Problem**: Transcriptions contained errors (e.g. `prisn ropie` instead of `Prisoner OP`, `Show Hero OP` instead of `Shauhar OP`).
+- **Solution**: Wrote a robust GPT prompt with examples and validation to infer meaningful and standardized nicknames. Did little bit of manual quality check to ignore incorrect names and matched a few similar names.
 
----
 
 ## **Implementation**
 
@@ -148,8 +156,11 @@ You are an expert at extracting nicknames from YouTube video transcripts, especi
    - Used GPT for advanced inference and standardization.
 
 ## Key Learnings
-- STT models need more training on data spoken in both hindi and english or hinglish. 
-- The critical role of inference optimization
-- The balance between audio quality and processing speed
-- The importance of GPU resources in ML applications
-- The real-world challenges of building AI-powered applications
+- STT models need more training on data spoken in both Hindi and English (Hinglish), as they currently struggle with mixed-language content.
+- GPT models require specific, detailed prompts for optimal results; simple instructions are often insufficient.
+- Claude and GPT-4 still have limitations when improving frontend code; they sometimes introduce new bugs even when making minor changes.
+- Both Claude and GPT-4 demonstrate strong visual comprehension abilities. When shown application screenshots, they can accurately identify and suggest fixes for specific visual issues.
+
+## Resources
+- [Live Quiz Platform](https://tanmay-op-quiz.vercel.app/)
+- [GitHub Repository](https://github.com/shriniket73/op-nickname-extraction)
