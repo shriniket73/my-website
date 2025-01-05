@@ -13,7 +13,7 @@ export default function MemesPage() {
 
   return (
     <section>
-      <h1 className="mb-8 text-2xl font-medium tracking-tight">Memes</h1>
+      {/* <h1 className="mb-8 text-2xl font-medium tracking-tight">Memes</h1> */}
       <MemeGallery images={memes} />
     </section>
   );
