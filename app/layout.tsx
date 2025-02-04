@@ -8,7 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import Footer from "./components/footer";
 import { ThemeProvider } from "./components/theme-switch";
 import { metaData } from "./config";
-import {PosthogScript} from "./components/PostHogScript"
+import {PosthogScript} from "./components/PosthogScript"
 
 export const metadata: Metadata = {
   metadataBase: new URL(metaData.baseUrl),
