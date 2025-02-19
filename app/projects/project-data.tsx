@@ -12,6 +12,42 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "Judgement game Score-Keeper",
+    date: "20-02-2025",
+    description:
+      "Made this as a part of an assignment (it asked me to make a GPT but I chose a webapp), was quite fun and got to learn a lot about state management in FE",
+    links: [
+      {
+        text: "Project",
+        url: "https://judgement-score-keeper.vercel.app/"
+      },
+      {
+        text: "Demo Video",
+        url: "https://streamable.com/vrkt8j"
+      },
+      {
+        text: "Github",
+        url: "https://github.com/shriniket73/judgement-score-keeper"
+      }
+    ]
+  },
+  {
+    title: "AI ASMR Voice Generator",
+    date: "29-01-2025",
+    description:
+      "Used the Open source TTS model Kokoro-82M and a mix of male and female voice to generate AI ASMR voice output",
+    links: [
+      {
+        text: "LinkedIn Post",
+        url: "https://www.linkedin.com/posts/shriniket-acharya_introducing-asmr-voice-generator-give-a-activity-7290367474347167744-Brjo?utm_source=share&utm_medium=member_desktop&rcm=ACoAABWqeykB3z_E0EVDrhyR5VkiWPEWPMfhI-c"
+      },
+      {
+        text: "Github",
+        url: "https://github.com/shriniket73/asmr-generation"
+      }
+    ]
+  },
+  {
     title: "OP Names extraction from Tanmay Bhat Videos",
     date: "25-12-2024",
     description:
