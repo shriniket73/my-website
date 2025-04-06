@@ -12,6 +12,22 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "YT Sponsor Skip Extension",
+    date: "06-04-2025",
+    description:
+      "Made a Chrome extension that identifies sponsored segments in YouTube videos and lets you skip them with one click.",
+    links: [
+      {
+        text: "Extension",
+        url: "https://chromewebstore.google.com/detail/Skippy%20-%20YouTube%20Sponsor%20Skipper/ndeeanompebamcoalkfnncoghchbdgji?hl=en-GB&authuser=0"
+      },
+      {
+        text: "Demo Video",
+        url: "https://www.linkedin.com/posts/shriniket-acharya_so-now-you-can-skip-sponsored-content-inside-activity-7313904700829880321-Xh3x?utm_source=share&utm_medium=member_desktop&rcm=ACoAABWqeykB3z_E0EVDrhyR5VkiWPEWPMfhI-c"
+      }
+    ]
+  },
+  {
     title: "Judgement game Score-Keeper",
     date: "20-02-2025",
     description:
