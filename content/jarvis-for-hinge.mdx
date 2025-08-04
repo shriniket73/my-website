@@ -161,79 +161,40 @@ I don’t even fully understand the technical details behind these algorithms, b
   />
 </div>
 
-**First Attempt:** AI-Powered Coordinate Detection
-```python
-# Send screenshot to Gemini and ask for button coordinates
-prompt = "Find the like button coordinates in this Hinge profile"
-response = model.generate_content([prompt, screenshot])
-```
-
-**Problem:** Inconsistent results. AI would sometimes return approximate coordinates or miss the button entirely.
-
-**Second Attempt:** OpenCV Template Matching
-
-I cropped a perfect 24×24 pixel heart button and used OpenCV template matching:
-
-```python
-import cv2
-import numpy as np
-
-def find_like_button(screenshot):
-    # Load the heart template
-    template = cv2.imread('heart_template.png', 0)
-    
-    # Convert screenshot to grayscale
-    gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
-    
-    # Template matching
-    result = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
-    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
-    
-    if max_val > 0.8:  # Confidence threshold
-        return max_loc
-```
-
-**Problem:** Worked in perfect conditions but failed with different lighting, dark mode, or when the heart button had slight variations in size or color.
-
-**Third Attempt:** Contour Detection
-```python
-def find_heart_contours(screenshot):
-    # Convert to HSV for better color filtering
-    hsv = cv2.cvtColor(screenshot, cv2.COLOR_BGR2HSV)
-    
-    # Create mask for heart color (pinkish-red)
-    mask = cv2.inRange(hsv, lower_pink, upper_pink)
-    
-    # Find contours
-    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    # Filter by area and shape
-    for contour in contours:
-        area = cv2.contourArea(contour)
-        if 200 < area < 800:  # Expected heart button size
-            return get_contour_center(contour)
-```
-
-**Problem:** Heart button color varies with lighting and Hinge's seasonal UI themes. Contours would pick up other pink elements or miss the button entirely.
-
-**Fourth Attempt:** Color Masking with Morphological Operations
-```python
-def find_heart_masked(screenshot):
-    # Multiple color ranges for different themes
-    masks = []
-    for lower, upper in color_ranges:
-        mask = cv2.inRange(screenshot, lower, upper)
-        masks.append(mask)
-    
-    # Combine all masks
-    combined_mask = cv2.bitwise_or(*masks)
-    
-    # Morphological operations to clean up
-    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-    cleaned = cv2.morphologyEx(combined_mask, cv2.MORPH_OPEN, kernel)
-```
-
-**Problem:** Still too brittle. Any UI update or lighting change broke the color assumptions.
+<div className="my-6">
+  <Table
+    data={{
+      headers: ["Method", "Description", "Outcome"],
+      rows: [
+        [
+          "AI Coordinates",
+          "Gemini Vision for button detection",
+          "Inconsistent results, frequent misses"
+        ],
+        [
+          "Template Matching",
+          "OpenCV template matching with icon",
+          "Failed with dark mode and size variations"
+        ],
+        [
+          "Contour Detection",
+          "Color-based shape detection",
+          "Failed with UI themes and lighting"
+        ],
+        [
+          "Color Masking",
+          "Advanced color filtering",
+          "Too brittle for UI/lighting changes"
+        ],
+        [
+          "SIFT + FLANN",
+          "Scale-invariant feature detection",
+          "✔️ 98% accuracy, <100ms, works everywhere"
+        ]
+      ],
+    }}
+  />
+</div>
 
 **Final Solution:** SIFT + FLANN Algorithm 
 
@@ -358,6 +319,10 @@ async def analyze_profile_live():
 ```
 
 **Result:** Analysis time dropped from 3-4 minutes to 30-45 seconds with much richer, real-time insights.
+
+<Callout emoji="🤷🏻‍♂️">
+After writing this blog I ran into some streaming connection issue and had to go back to batch analysis with Gemini Flash :(
+</Callout>
 
 ### The Analysis Output
 

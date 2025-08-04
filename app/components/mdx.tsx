@@ -38,22 +38,31 @@ function Code({ children, ...props }) {
 
 function Table({ data }) {
   let headers = data.headers.map((header, index) => (
-    <th key={index}>{header}</th>
+    <th key={index} className="p-2 whitespace-normal break-words">{header}</th>
   ));
   let rows = data.rows.map((row, index) => (
-    <tr key={index}>
-      {row.map((cell, cellIndex) => (
-        <td key={cellIndex}>{cell}</td>
-      ))}
+    <tr key={index} className="border-b dark:border-neutral-700">
+      {row.map((cell, cellIndex) => {
+        // Make first column narrower, middle column wider, last column medium
+        const widthClass = cellIndex === 0 ? "w-1/5" : 
+                          cellIndex === 1 ? "w-2/5" : "w-2/5";
+        return (
+          <td key={cellIndex} className={`p-2 whitespace-normal break-words ${widthClass}`}>
+            {cell}
+          </td>
+        );
+      })}
     </tr>
   ));
   return (
-    <table>
-      <thead>
-        <tr className="text-left">{headers}</tr>
-      </thead>
-      <tbody>{rows}</tbody>
-    </table>
+    <div className="my-6">
+      <table className="w-full table-fixed">
+        <thead>
+          <tr className="text-left border-b dark:border-neutral-700">{headers}</tr>
+        </thead>
+        <tbody>{rows}</tbody>
+      </table>
+    </div>
   );
 }
 
