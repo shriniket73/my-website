@@ -1,0 +1,547 @@
+---
+title: "JARVIS for Hinge"
+publishedAt: "2025-08-04"
+summary: "A detailed chronicle of building an AI-powered dating app assistant"
+tags: "AI, Automation, Computer Vision, Dating Apps"
+---
+
+## Why Build a Dating Agent?
+
+Picture this: You're 28, working on voice agents, learning about MCP (Model Context Protocol) servers, and actively using Hinge. 
+That's when the lightbulb moment hits-what if I could build a voice-controlled Hinge assistant that does all the heavy lifting while I just... talk to it?
+
+The vision was simple: Talk to an AI agent powered by ElevenLabs, which calls an MCP server that handles all 
+the Hinge interactions. Pure delegation-like having a wingman who never gets tired of swiping.
+
+**The Dream Flow:**
+
+```text
+Me: "Hey JARVIS, analyze this profile"
+Agent: *takes screenshot, analyzes, provides detailed breakdown*
+Me: "Sounds good, like this person"
+Agent: *executes like action* "Done! Profile liked successfully"
+```
+
+Completely agentic. Completely hands-off. Completely naive about what I was getting myself into.
+
+## The Demo
+
+<Video 
+  src="/videos/hinge_demo.mp4" 
+  controls 
+  style={{ 
+    maxWidth: "100%", 
+    height: "auto", 
+    border: "1px solid #ccc", 
+    borderRadius: "8px" 
+  }} 
+/>
+
+## The API Approach (Spoiler: It Failed)
+
+Every good automation story starts with the same question: "Can I just use their API?"
+
+### The Reverse Engineering Attempt
+
+I found this GitHub repository: [squeaky-hinge](https://github.com/radian-software/squeaky-hinge) where someone had reverse-engineered Hinge's notification system. The approach was solid:
+
+1. Install Hinge on a rooted Android phone
+2. Use mitmproxy to intercept network calls
+3. Extract API endpoints and tokens
+4. Build custom API client
+
+Naturally, I went down this rabbit hole immediately.
+
+**The Android Rooting**
+
+Rooting my phone brought back waves of nostalgia-memories of my Galaxy S Duos days in 2013-14, watching YouTube tutorials about flashing custom ROMs, and showing off new skins to friends. But nostalgia doesn't debug network interception issues.
+
+After hours of setup, I managed to capture some metadata and endpoints from the APK. I could see API calls happening, had some tokens, but translating that into working HTTP requests? Absolute failure. The authentication flow was too complex, and I was missing crucial headers or session management.
+
+**Lesson #1:** Sometimes the front door is locked for a reason.
+
+However, I'm very curious how this guy managed to make Cursor for dating by pulling Hinge profiles via API. 
+Maybe I'll figure it out one day.
+<StaticTweet id="1947311604988538996" />
+
+## The Visual Epiphany
+
+When APIs fail, there's always Plan B: automate what humans see.
+
+### The Computer Vision Proof of Concept
+
+I took a screenshot of my Hinge app and sent it to ChatGPT with a simple prompt: "Analyze this dating profile."
+
+**Result:** Content policy violation. ChatGPT refused to analyze dating profiles.
+
+**Backup Plan:** Gemini.
+
+**Result:** Detailed, helpful analysis with zero restrictions. Gemini dove right in, analyzing photos, bio, interests, even suggesting conversation starters.
+
+This was nice. If Gemini could understand dating profiles, I could build the entire system around visual automation.
+
+## Building the Automation Engine
+
+Time to fire up Cursor and start the real development work.
+
+### The Tech Stack Decision
+
+**Core Components:**
+- **Genymotion Emulator:** Run Hinge app on macOS in a controlled environment
+- **PyAutoGUI:** Simulate clicks and swipes
+- **OpenCV:** Computer vision for button detection (This came way later)
+- **Gemini Live API:** Profile analysis and UI element detection
+- **ElevenLabs + MCP Server:** Voice control integration (planned)
+
+### The Window Management Challenge
+
+Getting reliable window detection to identify where the hinge is running on macOS proved trickier than expected.
+
+**First Attempt:** PyGetWindow
+```python
+import pygetwindow as gw
+windows = gw.getWindowsWithTitle("Genymotion")
+```
+
+**Problem:** Library had compatibility issues with macOS and Python 3.13.
+
+**Solution:** Native AppleScript integration with Yabai fallback
+```python
+# AppleScript for basic window management
+script = '''
+tell application "Genymotion"
+    activate
+end tell
+'''
+subprocess.run(['osascript', '-e', script])
+
+# Yabai for precise window control
+def find_emulator_window():
+    result = subprocess.run(['yabai', '-m', 'query', '--windows'], 
+                          capture_output=True, text=True)
+    windows = json.loads(result.stdout)
+    
+    for window in windows:
+        if window.get('app') == 'Genymotion Emulator':
+            return window.get('id')
+```
+
+**Tip:** Yabai provided exact window coordinates and reliable focusing. This single change reduced mis-clicks by 80%.
+
+## The Computer Vision Deep Dive
+
+### Button Detection: The Heart of the Problem
+
+Hinge has two main actions: Like (heart button) and Pass (X button). The Pass button was easy - it's always visible and in the same relative position. The Like button? That's where things got interesting.
+
+**The Challenge:** The heart button moves as you scroll through profile photos. Static coordinates wouldn't work, so how to detect a heart shape button which could be on any position on the screen.
+
+<div className="flex flex-col items-center my-4">
+  <Image
+    src="/images/tony-stark-meme.png"
+    alt="Tony Stark Civil War Meme"
+    width={350}
+    height={150}
+    className="rounded-lg shadow-md"
+  />
+</div>
+
+To be honest, the entire detection process turned out to be surprisingly 
+straightforward thanks to o3. I just asked it how to reliably detect the heart button, 
+and after trying a few different methods, it suggested using SIFT with FLANN. 
+I don’t even fully understand the technical details behind these algorithms, but they worked flawlessly for my needs.
+
+<div className="flex justify-center my-4">
+  <Image
+    src="/images/blur-like.png"
+    alt="Blurred Hinge Like Button"
+    width={250}
+    height={250}
+    className="rounded-lg shadow-md"
+  />
+</div>
+
+**First Attempt:** AI-Powered Coordinate Detection
+```python
+# Send screenshot to Gemini and ask for button coordinates
+prompt = "Find the like button coordinates in this Hinge profile"
+response = model.generate_content([prompt, screenshot])
+```
+
+**Problem:** Inconsistent results. AI would sometimes return approximate coordinates or miss the button entirely.
+
+**Second Attempt:** OpenCV Template Matching
+
+I cropped a perfect 24×24 pixel heart button and used OpenCV template matching:
+
+```python
+import cv2
+import numpy as np
+
+def find_like_button(screenshot):
+    # Load the heart template
+    template = cv2.imread('heart_template.png', 0)
+    
+    # Convert screenshot to grayscale
+    gray = cv2.cvtColor(screenshot, cv2.COLOR_BGR2GRAY)
+    
+    # Template matching
+    result = cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(result)
+    
+    if max_val > 0.8:  # Confidence threshold
+        return max_loc
+```
+
+**Problem:** Worked in perfect conditions but failed with different lighting, dark mode, or when the heart button had slight variations in size or color.
+
+**Third Attempt:** Contour Detection
+```python
+def find_heart_contours(screenshot):
+    # Convert to HSV for better color filtering
+    hsv = cv2.cvtColor(screenshot, cv2.COLOR_BGR2HSV)
+    
+    # Create mask for heart color (pinkish-red)
+    mask = cv2.inRange(hsv, lower_pink, upper_pink)
+    
+    # Find contours
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Filter by area and shape
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if 200 < area < 800:  # Expected heart button size
+            return get_contour_center(contour)
+```
+
+**Problem:** Heart button color varies with lighting and Hinge's seasonal UI themes. Contours would pick up other pink elements or miss the button entirely.
+
+**Fourth Attempt:** Color Masking with Morphological Operations
+```python
+def find_heart_masked(screenshot):
+    # Multiple color ranges for different themes
+    masks = []
+    for lower, upper in color_ranges:
+        mask = cv2.inRange(screenshot, lower, upper)
+        masks.append(mask)
+    
+    # Combine all masks
+    combined_mask = cv2.bitwise_or(*masks)
+    
+    # Morphological operations to clean up
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    cleaned = cv2.morphologyEx(combined_mask, cv2.MORPH_OPEN, kernel)
+```
+
+**Problem:** Still too brittle. Any UI update or lighting change broke the color assumptions.
+
+**Final Solution:** SIFT + FLANN Algorithm 
+
+
+**Why SIFT + FLANN Works Where Others Failed:**
+
+- **Scale Invariant:** Heart button can appear at different sizes - SIFT doesn't care
+- **Rotation Invariant:** Handles any slight UI rotations or perspective changes  
+- **Lighting Independent:** Detects structural features, not colors or pixel values
+- **Feature Matching:** Compares distinctive keypoints rather than exact pixel patterns
+
+```python
+def find_heart_with_sift(screenshot):
+    # Initialize SIFT detector
+    sift = cv2.SIFT_create()
+    
+    # Find keypoints and descriptors for template and screenshot
+    kp1, des1 = sift.detectAndCompute(heart_template, None)
+    kp2, des2 = sift.detectAndCompute(screenshot, None)
+    
+    # FLANN matcher for fast approximate matching
+    FLANN_INDEX_KDTREE = 1
+    index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    search_params = dict(checks=50)
+    flann = cv2.FlannBasedMatcher(index_params, search_params)
+    
+    matches = flann.knnMatch(des1, des2, k=2)
+    
+    # Lowe's ratio test - filter good matches
+    good_matches = []
+    for m, n in matches:
+        if m.distance < 0.7 * n.distance:  # 70% confidence threshold
+            good_matches.append(m)
+    
+    if len(good_matches) > 10:  # Need at least 10 good features
+        # Extract matched points and find homography
+        src_pts = np.float32([kp1[m.queryIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+        dst_pts = np.float32([kp2[m.trainIdx].pt for m in good_matches]).reshape(-1, 1, 2)
+        
+        # Find transformation matrix
+        matrix, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
+        
+        # Calculate button center
+        h, w = heart_template.shape
+        corners = np.float32([[0,0], [w,0], [w,h], [0,h]]).reshape(-1, 1, 2)
+        transformed_corners = cv2.perspectiveTransform(corners, matrix)
+        
+        # Return center point
+        center_x = int(np.mean(transformed_corners[:, 0, 0]))
+        center_y = int(np.mean(transformed_corners[:, 0, 1]))
+        return (center_x, center_y)
+    
+    return None
+```
+
+**Result:** 98%+ accuracy across all lighting conditions, UI themes, seasonal variations, and button sizes. Detection time under 100ms. The system became completely reliable - exactly what you need for automation that runs unattended.
+
+## Profile Analysis Process
+
+### The Scrolling Screenshot
+
+Initial approach for profile analysis was painfully slow:
+
+1. Take screenshot
+2. Scroll down
+3. Take another screenshot
+4. Repeat 10-12 times
+5. Send all screenshots to Gemini
+6. Wait 3-4 minutes for analysis
+
+**Then comes Gemini Live API**
+
+Instead of batch processing, I implemented real-time streaming analysis:
+
+```python
+import websockets
+import json
+import base64
+
+async def analyze_profile_live():
+    uri = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1alpha.GenerativeService.StreamGenerateContent"
+    
+    async with websockets.connect(uri) as websocket:
+        # Initialize conversation
+        await websocket.send(json.dumps({
+            "setup": {
+                "model": "models/gemini-2.0-flash-exp",
+                "generation_config": {"response_modalities": ["TEXT"]}
+            }
+        }))
+        
+        analysis_buffer = []
+        
+        # Stream screenshots while scrolling
+        for scroll_position in range(0, 10):
+            screenshot = capture_screenshot()
+            scroll_down()
+            
+            # Send frame to Gemini
+            frame_data = {
+                "client_content": {
+                    "turns": [{
+                        "parts": [{
+                            "inline_data": {
+                                "mime_type": "image/png",
+                                "data": base64.b64encode(screenshot).decode()
+                            }
+                        }]
+                    }]
+                }
+            }
+            
+            await websocket.send(json.dumps(frame_data))
+            
+            # Receive real-time analysis
+            response = await websocket.recv()
+            analysis_chunk = json.loads(response)
+            analysis_buffer.append(analysis_chunk)
+        
+        # Combine all chunks into final analysis
+        return combine_analysis_chunks(analysis_buffer)
+```
+
+**Result:** Analysis time dropped from 3-4 minutes to 30-45 seconds with much richer, real-time insights.
+
+### The Analysis Output
+
+Now, the system produces in-depth profile analyses like this, and I can have a natural 
+conversation with the agent about the profile - discussing red flags, asking specific questions, and getting detailed, thoughtful answers in real time.
+
+```python
+{
+  "analysis": {
+    "basic_info": {
+      "name": "Gauri",
+      "age": "27",
+      "height": "5' 4\"",
+      "occupation": "Senior Software Engineer",
+      "religion": "Hindu",
+      "political_views": "Moderate"
+    },
+    "photos_detailed": [
+      {
+        "photo_number": 1,
+        "setting": "Outdoor restaurant/cafe",
+        "activity": "Posing for a photo",
+        "description": "Gauri is sitting at a table with a menu and plants in the background, wearing a yellow tube top and jeans, posing with her hands above her head.",
+        "impression": "Playful and confident"
+      }
+    ],
+    "personality_assessment": {
+      "traits": ["Introverted", "Stylish", "Adventurous", "Creative", "Confident"],
+      "communication_style": "Direct",
+      "social_preference": "Ambivert"
+    },
+    "compatibility_factors": {
+      "conversation_starters": [
+        "Ask about her crafting projects",
+        "Discuss favorite travel destinations", 
+        "Share humorous stories"
+      ],
+      "lifestyle_compatibility": "Potentially good, needs a partner with good sense of humor and is not a man of few words"
+    },
+    "overall_assessment": {
+      "compatibility_rating": "8/10 - Shows a good personality. Requires someone who appreciates introverts and good humor.",
+      "recommendation": "Swipe right - Worth getting to know better"
+    }
+  }
+}
+````
+
+## Voice Integration: Becoming JARVIS
+
+### The ElevenLabs Configuration
+
+The voice integration turned out to be surprisingly straightforward, thanks to ElevenLabs' built-in agent capabilities. The heavy lifting was already done - I just needed to configure three things:
+
+**1. Voice Selection:** I tested several voices and found that a crisp British accent captured that JARVIS feel perfectly. ElevenLabs' "Adam Stone - late night radio" voice with slightly reduced speed gave it that authoritative, butler-like quality.
+
+**2. System Prompt Engineering:** This was the only custom development needed. I asked ChatGPT to help craft a system prompt that would make the agent speak and behave like JARVIS from Iron Man:
+
+```text
+You are JARVIS, Tony Stark's AI assistant. You are sophisticated, 
+intelligent, and slightly dry in your humor. 
+You speak with confidence and efficiency, providing helpful analysis 
+while maintaining a professional yet warm demeanor. 
+You address the user as "sir" occasionally but not excessively. When 
+analyzing dating profiles, you provide thoughtful insights while
+maintaining appropriate decorum. You are direct but polite, and 
+you always confirm actions before executing them.
+```
+
+**3. Tool Configuration:** ElevenLabs' agent platform made webhook integration trivial. I simply added my ngrok endpoints as available tools:
+<Callout emoji="🤷🏻‍♂️">
+I tried building an MCP but for some reason that didn't work, so had to fallback to webhooks with tool calls
+</Callout>
+
+```json
+{
+  "tools": [
+    {
+      "name": "analyze_profile",
+      "description": "Analyze the currently visible Hinge profile",
+      "url": "https://your-ngrok-url.ngrok.io/analyze_profile",
+      "method": "POST"
+    },
+    {
+      "name": "like_profile", 
+      "description": "Like the current profile",
+      "url": "https://your-ngrok-url.ngrok.io/like_profile",
+      "method": "POST"
+    },
+    {
+      "name": "pass_profile",
+      "description": "Pass on the current profile", 
+      "url": "https://your-ngrok-url.ngrok.io/pass_profile",
+      "method": "POST"
+    }
+  ]
+}
+```
+
+That's it. No custom voice processing, no speech-to-text implementation, no complex dialogue management. ElevenLabs handled the entire conversational flow, tool calling logic, and natural language understanding out of the box.
+
+### The Complete Workflow
+
+With everything integrated, the final user experience became seamless:
+
+```text
+Me: "Hey JARVIS, analyze the current profile"
+Agent: "Certainly, sir. Let me take a look at this profile for you."
+*Calls /analyze_profile webhook*
+System: *Captures screenshots, sends to Gemini, processes analysis*
+Agent: "This is Gauri, 27, a software engineer from the area. 
+She enjoys crafting and travel,with a playful and confident
+personality. Based on her interests and profile presentation, 
+I'd rate compatibility at 8 out of 10. She appears to value humor
+and meaningful conversation. My recommendation would be to proceed
+with interest. Shall I like this profile for you, sir?"
+Me: "Yes, let's send her a like"
+Agent: "Very good, sir. Liking the profile now."
+*Calls /like_profile webhook*
+System: *Uses SIFT algorithm to find heart button, clicks it, then
+clicks Send Like*
+Agent: "Profile liked successfully. The like has been sent. Is there
+anything else you'd like me to help you with?"
+```
+
+The entire voice experience required maybe 30 minutes of configuration. The real engineering effort was entirely in the computer vision and automation backend - ElevenLabs abstracted away all the conversational AI complexity.
+## The Vibe Coding Reality Check
+
+Let me take a moment to talk about the elephant in the room: "vibe coding" and AI-assisted development.
+
+I've been vibe coding since October 2024, using every major tool out there - Cursor, Windsurf, Lovable, Bolt, Replit, v0, Claude Code, and more. Here's my honest take:
+
+### The Good
+
+- **AI excels at logic definition:** When you can describe what you want in clear, binary terms, AI delivers high-quality code
+- **Documentation and setup:** First outputs with detailed instructions often produce impressive results
+- **Rapid prototyping:** Getting from idea to working proof-of-concept is faster than ever
+
+### The Reality
+
+
+- **The improvement curve is exponential... downward:** Amazing first results, but significant improvements beyond the initial version become increasingly difficult
+
+<div className="flex justify-center my-4">
+  <Image
+    src="/images/learning-curve-time-new.png"
+    alt="Learning Curve Time"
+    width={1000}
+    height={480}
+    quality={100}
+    className="rounded-lg shadow-md"
+  />
+</div>
+- **Context loss is real:** Long conversations in Cursor seem to suffer from memory issues about previous implementations. 
+- **Reasoning should be default:** The amount of confident but wrong code generated is staggering
+
+I have plenty more thoughts on vibe coding and AI tools, but I'll save that rant for another post.
+
+## What's Next?
+
+If you look at the direction of every ambitious AI company, the endgame is 
+always the same: build JARVIS for everything. 
+[Comet by Perplexity](https://comet.perplexity.ai/) and the [recent release of ChatGPT Agents](https://openai.com/index/introducing-chatgpt-agent/)
+
+When people talk about "agentic AI," what they really mean is giving software true agency - the ability to accomplish tasks end-to-end, autonomously, not just assist or automate a step here and there. Honestly, despite all the hype about "AI agents in production," what we mostly have today are glorified workflows, assistants, or bots. They can follow scripts, chain APIs, maybe even make a few decisions, but a truly agentic application - one that can independently understand goals, plan, adapt, and execute in the real world from start to finish? I haven't seen it yet.
+
+On the other note, here's how I see the evolution of human-AI interaction:
+
+<div className="flex justify-center my-4">
+  <Image
+    src="/images/human-input-modality.png"
+    alt="Human Input Modality"
+    width={400}
+    height={400}
+    className="rounded-lg shadow-md"
+  />
+</div>
+
+We're right at the start of the "Voice" era - just beginning to move past typing and clicking. But the real leap is when we get to "Think": when you can just have an intent, and the system understands and acts, no interface required.
+
+In this video, Eric Schmidt Ex-Google CEO talks about how AI will fundamentally change the way we interact with computers. He predicts that traditional user interfaces-the old "WIMP" model (Windows, Icons, Menus, 
+and Pointers) invented at Xerox PARC 50 years ago-will mostly disappear. 
+
+Instead, AI agents will understand natural language and generate interfaces on the fly, so we won't be limited to clicking and typing.
+
+<YouTube videoId="qaPHK1fJL5s" start={3190} />
+
+The modality of human input is changing fast. We started with text, then voice, and the next step is - maybe even thought. I'm genuinely excited for the day when you just *think* and things happen. It's not here yet, and it's going to take time (and a lot of work), but I hope we get there quickly. Until then, I'm happy to keep building and experimenting at the edge of what's possible.

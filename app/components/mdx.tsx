@@ -7,8 +7,8 @@ import { TweetComponent } from "./tweet";
 import { CaptionComponent } from "./caption";
 import { YouTubeComponent } from "./youtube";
 import { ImageGrid } from "./image-grid";
-import rehypeKatex from "rehype-katex";
 import { VideoComponent } from "./video";
+import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import "katex/dist/katex.min.css";
 

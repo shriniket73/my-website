@@ -12,7 +12,21 @@ type Metadata = {
 function parseFrontmatter(fileContent: string) {
   let frontmatterRegex = /---\s*([\s\S]*?)\s*---/;
   let match = frontmatterRegex.exec(fileContent);
-  let frontMatterBlock = match![1];
+  
+  // Handle files without frontmatter
+  if (!match) {
+    return {
+      metadata: {
+        title: "Untitled",
+        publishedAt: new Date().toISOString().split('T')[0],
+        summary: "No summary available",
+        tags: ""
+      } as Metadata,
+      content: fileContent.trim()
+    };
+  }
+  
+  let frontMatterBlock = match[1];
   let content = fileContent.replace(frontmatterRegex, "").trim();
   let frontMatterLines = frontMatterBlock.trim().split("\n");
   let metadata: Partial<Metadata> = {};

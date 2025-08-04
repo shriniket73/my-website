@@ -2,6 +2,11 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+  experimental: {
+    mdxRs: true,
+  },
+  transpilePackages: ['chart.js'],
   async rewrites() {
     return [
       // Your existing feed rewrites
@@ -51,4 +56,5 @@ const nextConfig = {
   }
 };
 
-module.exports = nextConfig;
+const withMDX = require('@next/mdx')()
+module.exports = withMDX(nextConfig);
