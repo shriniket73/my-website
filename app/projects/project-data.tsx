@@ -12,6 +12,22 @@ export interface Project {
 
 export const projects: Project[] = [
   {
+    title: "JARVIS for Hinge",
+    date: "04-08-2025",
+    description:
+      "built JARVIS for Hinge.You can ask about compatibility, discuss photos and prompts, spot red flags, and send likes or pass on profiles - all with voice.",
+    links: [
+      {
+        text: "Blog Post",
+        url: "https://www.shriniket.me/blog/jarvis-for-hinge"
+      },
+      {
+        text: "Demo Video",
+        url: "https://www.linkedin.com/posts/shriniket-acharya_built-jarvis-for-hinge-you-can-ask-about-activity-7358111529579237376-Jpz-?utm_source=share&utm_medium=member_desktop&rcm=ACoAABWqeykB3z_E0EVDrhyR5VkiWPEWPMfhI-c"
+      }
+    ]
+  },
+  {
     title: "YT Sponsor Skip Extension",
     date: "06-04-2025",
     description:
