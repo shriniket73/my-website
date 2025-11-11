@@ -17,7 +17,15 @@ export default function Page() {
       </a> */}
       <div className="prose prose-neutral dark:prose-invert">
         <ul>
-          <li>i I'm currently exploring Large Language Models (LLMs) to build cool stuff. check 
+          <li>I'm currently building voice ai agents for businesses. Check out<span> </span>
+            <a 
+            href="https://www.osvi.ai" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-sm inline-flex items-center gap-1">
+              Osvi AI </a>
+              <span className="text-sm"> ↗</span>.</li>
+            <li>I also build cool stuff with LLMs. Check out my<span > </span>
             <a
               href="https://www.shriniket.me/projects"
               target="_blank"
